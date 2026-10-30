@@ -88,3 +88,4 @@ Before pushing, check `git status` shows no `.env`, `*.tfstate`, `terraform.tfva
 - The Terraform provider is pinned to `~> 1.0`. Provider attribute names change between major versions, so adjust if `validate` complains.
 - The HMDA report is a simplified mapping, not a filing-ready LAR.
 - Bureau data arriving after the SLA leaves a rejection row next to a later decision. A warn-level test flags it; a production version needs a `superseded_at` column.
+# mortgage-underwriting-pipeline
