@@ -1,0 +1,46 @@
+name: mortgage_underwriting
+version: "1.0.0"
+config-version: 2
+profile: mortgage_underwriting
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+target-path: target
+clean-targets: [target, dbt_packages]
+
+# Underwriting policy lives here, not in SQL. Change a limit = one-line PR + new rule_version.
+vars:
+  rule_version: "v1.0"
+  max_ltv_pct: 95            # decline if LTV > 95
+  max_dti_pct: 43            # decline if DTI > 43
+  min_credit_score: 620      # decline if FICO < 620
+  cosigner_max_credit_score: 660
+  cosigner_min_dti_pct: 36
+  credit_sla_hours: 24       # how long an application may wait for bureau data
+
+models:
+  mortgage_underwriting:
+    +transient: false        # dbt-snowflake defaults to TRANSIENT (max 1 day Time Travel). Not OK for audit.
+    +on_schema_change: append_new_columns
+    staging:
+      +schema: staging       # internal only. Views here run with owner rights, so analysts get NO access.
+      +materialized: view
+      +tags: ["silver"]
+    silver:
+      +schema: silver
+      +materialized: table
+      +tags: ["silver"]
+    gold:
+      +schema: gold
+      +tags: ["gold"]
+
+seeds:
+  mortgage_underwriting:
+    +schema: gold
+    +tags: ["gold"]
+
+tests:
+  mortgage_underwriting:
+    +severity: error

@@ -1,0 +1,12 @@
+# Local demo only: single container, SQLite metadata DB. Use CeleryExecutor/K8s + Postgres in production.
+services:
+  airflow:
+    build: .
+    command: standalone
+    ports: ["8080:8080"]
+    env_file: ../.env
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ../:/opt/airflow/project

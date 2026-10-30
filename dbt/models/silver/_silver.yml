@@ -1,0 +1,39 @@
+version: 2
+models:
+  - name: silver_loan_applications
+    description: Validated, joined master record. SSN and name are masked for everyone except compliance.
+    columns:
+      - name: application_id
+        tests: [not_null, unique]
+      - name: applicant_key
+        tests: [not_null]
+      - name: fico_score
+        tests: [not_null]
+      - name: property_value
+        tests: [not_null]
+      - name: monthly_gross_income
+        tests: [not_null]
+  - name: technical_rejections
+    description: Append-only log of applications rejected for missing or invalid critical fields.
+    columns:
+      - name: application_id
+        tests: [not_null]
+      - name: rejection_reason
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - MISSING_APPLICANT_ID
+                  - MISSING_LOAN_AMOUNT
+                  - INVALID_LOAN_AMOUNT
+                  - MISSING_PROPERTY_VALUE
+                  - INVALID_PROPERTY_VALUE
+                  - MISSING_INCOME
+                  - INVALID_INCOME
+                  - MISSING_CREDIT_SCORE
+                  - INVALID_CREDIT_SCORE
+                  - MISSING_MONTHLY_DEBT
+                  - INVALID_MONTHLY_DEBT
+                  - INVALID_SSN
+                  - CREDIT_RECORD_NOT_RECEIVED

@@ -1,0 +1,19 @@
+version: 2
+models:
+  - name: stg_mortgage_applications
+    columns:
+      - name: application_id
+        tests: [not_null, unique]
+  - name: stg_credit_bureau
+    columns:
+      - name: applicant_id
+        tests: [not_null, unique]
+  - name: int_applications_validated
+    columns:
+      - name: application_id
+        tests: [not_null, unique]
+      - name: processing_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: [VALIDATED, PENDING_CREDIT, TECHNICAL_REJECTED]

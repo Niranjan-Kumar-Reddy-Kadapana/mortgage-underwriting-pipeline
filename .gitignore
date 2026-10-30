@@ -1,0 +1,16 @@
+.env
+*.pem
+*.p8
+data/out/
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+logs/
+__pycache__/
+.pytest_cache/
+.venv/
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+.DS_Store

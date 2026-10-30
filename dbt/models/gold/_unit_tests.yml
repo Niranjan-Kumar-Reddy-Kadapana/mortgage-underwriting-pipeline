@@ -1,0 +1,65 @@
+version: 2
+# Unit tests run on mocked rows, so they prove the rules at every boundary without real data.
+# Needs dbt >= 1.8. Build the empty upstream relations first:  dbt run --empty --select +int_underwriting_rules
+unit_tests:
+  - name: ut_ltv_boundary
+    model: int_underwriting_rules
+    given:
+      - input: ref('silver_loan_applications')
+        rows:
+          - {application_id: ltv_95_00, loan_amount: 95000, property_value: 100000, monthly_gross_income: 10000, monthly_debt_obligations: 2000, fico_score: 720}
+          - {application_id: ltv_95_01, loan_amount: 95010, property_value: 100000, monthly_gross_income: 10000, monthly_debt_obligations: 2000, fico_score: 720}
+    expect:
+      rows:
+        - {application_id: ltv_95_00, decision_status: APPROVED, primary_reason_code: APPROVED}
+        - {application_id: ltv_95_01, decision_status: DECLINED, primary_reason_code: DECLINED_LTV_EXCEEDED}
+
+  - name: ut_dti_boundary
+    model: int_underwriting_rules
+    given:
+      - input: ref('silver_loan_applications')
+        rows:
+          - {application_id: dti_43_00, loan_amount: 240000, property_value: 300000, monthly_gross_income: 10000, monthly_debt_obligations: 4300, fico_score: 700}
+          - {application_id: dti_43_01, loan_amount: 240000, property_value: 300000, monthly_gross_income: 10000, monthly_debt_obligations: 4301, fico_score: 700}
+    expect:
+      rows:
+        - {application_id: dti_43_00, decision_status: APPROVED, primary_reason_code: APPROVED}
+        - {application_id: dti_43_01, decision_status: DECLINED, primary_reason_code: DECLINED_DTI_EXCEEDED}
+
+  - name: ut_credit_score_boundary
+    model: int_underwriting_rules
+    given:
+      - input: ref('silver_loan_applications')
+        rows:
+          - {application_id: fico_619, loan_amount: 240000, property_value: 300000, monthly_gross_income: 10000, monthly_debt_obligations: 2000, fico_score: 619}
+          - {application_id: fico_620, loan_amount: 240000, property_value: 300000, monthly_gross_income: 10000, monthly_debt_obligations: 2000, fico_score: 620}
+    expect:
+      rows:
+        - {application_id: fico_619, decision_status: DECLINED, primary_reason_code: DECLINED_CREDIT_SCORE_BELOW_MIN}
+        - {application_id: fico_620, decision_status: APPROVED, primary_reason_code: APPROVED}
+
+  - name: ut_cosigner_band
+    model: int_underwriting_rules
+    given:
+      - input: ref('silver_loan_applications')
+        rows:
+          - {application_id: cs_620_dti36, loan_amount: 240000, property_value: 300000, monthly_gross_income: 10000, monthly_debt_obligations: 3600, fico_score: 620}
+          - {application_id: cs_660_dti43, loan_amount: 240000, property_value: 300000, monthly_gross_income: 10000, monthly_debt_obligations: 4300, fico_score: 660}
+          - {application_id: no_661_dti43, loan_amount: 240000, property_value: 300000, monthly_gross_income: 10000, monthly_debt_obligations: 4300, fico_score: 661}
+          - {application_id: no_640_dti35_99, loan_amount: 240000, property_value: 300000, monthly_gross_income: 10000, monthly_debt_obligations: 3599, fico_score: 640}
+    expect:
+      rows:
+        - {application_id: cs_620_dti36, decision_status: REQUIRES_COSIGNER, primary_reason_code: REQUIRES_COSIGNER}
+        - {application_id: cs_660_dti43, decision_status: REQUIRES_COSIGNER, primary_reason_code: REQUIRES_COSIGNER}
+        - {application_id: no_661_dti43, decision_status: APPROVED, primary_reason_code: APPROVED}
+        - {application_id: no_640_dti35_99, decision_status: APPROVED, primary_reason_code: APPROVED}
+
+  - name: ut_multiple_decline_reasons_priority
+    model: int_underwriting_rules
+    given:
+      - input: ref('silver_loan_applications')
+        rows:
+          - {application_id: all_three, loan_amount: 99000, property_value: 100000, monthly_gross_income: 10000, monthly_debt_obligations: 5000, fico_score: 600}
+    expect:
+      rows:
+        - {application_id: all_three, decision_status: DECLINED, primary_reason_code: DECLINED_CREDIT_SCORE_BELOW_MIN, ltv_pct: 99.00, dti_pct: 50.00}

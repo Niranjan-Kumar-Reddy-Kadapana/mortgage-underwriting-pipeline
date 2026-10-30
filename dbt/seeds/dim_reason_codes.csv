@@ -1,0 +1,6 @@
+reason_code,decision_status,description,hmda_denial_reason_code
+APPROVED,APPROVED,Meets all underwriting rules,10
+REQUIRES_COSIGNER,REQUIRES_COSIGNER,FICO 620-660 and DTI 36-43; co-signer needed,10
+DECLINED_CREDIT_SCORE_BELOW_MIN,DECLINED,FICO below minimum,3
+DECLINED_DTI_EXCEEDED,DECLINED,Debt-to-income above limit,1
+DECLINED_LTV_EXCEEDED,DECLINED,Loan-to-value above limit (collateral),4

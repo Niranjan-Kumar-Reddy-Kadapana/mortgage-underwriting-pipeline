@@ -1,0 +1,6 @@
+version: 2
+seeds:
+  - name: dim_reason_codes
+    columns:
+      - name: reason_code
+        tests: [not_null, unique]
